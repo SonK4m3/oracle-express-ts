@@ -134,6 +134,10 @@ app.get("/logout", (req: Request, res: Response) => {
 
 app.use("/user", userController);
 
+app.get("*", (req: Request, res: Response) => {
+  res.send("Sorry, this is invalid URL");
+});
+
 app.use("/static", express.static("public"));
 
 app.listen(port, () => {
