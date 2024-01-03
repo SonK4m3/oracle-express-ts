@@ -1,16 +1,8 @@
-import express, {
-  Express,
-  Request,
-  Response,
-  Application,
-  NextFunction,
-} from "express";
+import express, { Request, Response, Application, NextFunction } from "express";
 import dotenv from "dotenv";
-import { SessionData } from "express-session";
 
-var path = require("path");
+const configViewEngine = require("./config/viewEngine");
 var session = require("express-session");
-
 var userController = require("./controller/user.controller");
 
 dotenv.config();
@@ -19,10 +11,7 @@ const app: Application = express();
 const port = process.env.PORT || 8081;
 
 // config
-app.set("view engine", "ejs");
-// app.engine("ejs", require("ejs").__express);
-
-app.set("views", path.join(__dirname, "views"));
+configViewEngine(app);
 
 // middleware
 app.use(express.urlencoded({ extended: false }));
@@ -88,6 +77,7 @@ function restrict(req: Request, res: Response, next: NextFunction) {
 }
 
 app.get("/", (req: Request, res: Response) => {
+  console.log(req);
   res.redirect("/login");
 });
 
@@ -100,7 +90,11 @@ app.post("/login", (req: Request, res: Response, next: NextFunction) => {
     req.body.username,
     req.body.password,
     (err: string | null, user: User | null) => {
-      if (err) return next(err);
+      if (err) {
+        req.session.error = err;
+        return res.redirect("back");
+      }
+
       if (user) {
         req.session.regenerate(() => {
           req.session.user = user;
@@ -137,8 +131,6 @@ app.use("/user", userController);
 app.get("*", (req: Request, res: Response) => {
   res.send("Sorry, this is invalid URL");
 });
-
-app.use("/static", express.static("public"));
 
 app.listen(port, () => {
   console.log(`listening at http://localhost:${port}`);
