@@ -1,17 +1,50 @@
 import express, { Express, Request, Response } from "express";
 import User from "../typings/user";
+import users from "../db/user";
+
 var router = express.Router();
 
-var users: User[] = [
-  { id: 1, name: "Son 1", age: 21 },
-  { id: 2, name: "Son 2", age: 21 },
-];
+const format = (path: string) => {
+  const obj = require(path);
+
+  return (req: Request, res: Response) => {
+    res.format(obj);
+  };
+};
+
+router.get("/", format("../content/users.ts"));
 
 router.get("/list", (req: Request, res: Response) => {
-  res.send(users);
+  res.format({
+    html: function () {
+      res.send(
+        "<ul>" +
+          users
+            .map(function (user) {
+              return "<li>" + user.name + "</li>";
+            })
+            .join("") +
+          "</ul>"
+      );
+    },
+
+    text: function () {
+      res.send(
+        users
+          .map(function (user) {
+            return " - " + user.name + "\n";
+          })
+          .join("")
+      );
+    },
+
+    json: function () {
+      res.json(users);
+    },
+  });
 });
 
-router.get("/:action/:id", (req: Request, res: Response) => {
+router.get("/do/:action/:id", (req: Request, res: Response) => {
   const user = users.find((user) => user.id === parseInt(req.params.id));
 
   if (user !== undefined) {
