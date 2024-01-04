@@ -3,7 +3,7 @@ import dotenv from "dotenv";
 
 const configViewEngine = require("./config/viewEngine");
 var session = require("express-session");
-var userController = require("./controller/user.controller");
+var apiRoutes = require("./routes/api");
 
 dotenv.config();
 
@@ -126,7 +126,7 @@ app.get("/logout", (req: Request, res: Response) => {
   });
 });
 
-app.use("/user", userController);
+app.use("/v1/api", apiRoutes);
 
 app.get("*", (req: Request, res: Response) => {
   res.send("Sorry, this is invalid URL");

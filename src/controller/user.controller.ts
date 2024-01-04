@@ -1,20 +1,25 @@
-import express, { Express, Request, Response } from "express";
+import { Request, Response } from "express";
 import User from "../typings/user";
 import users from "../db/user";
 
-var router = express.Router();
-
-const format = (path: string) => {
-  const obj = require(path);
-
-  return (req: Request, res: Response) => {
-    res.format(obj);
-  };
+const createUser = (req: Request, res: Response) => {
+  res.send("create user");
 };
 
-router.get("/", format("../content/users.ts"));
+const updateUser = (req: Request, res: Response) => {
+  res.send("update user");
+};
 
-router.get("/list", (req: Request, res: Response) => {
+const deleteUser = (req: Request, res: Response) => {
+  res.send("delete user");
+};
+
+const getUserById = (req: Request, res: Response) => {
+  const userId = req.params.id;
+  res.send("get user " + userId);
+};
+
+const userFormat = (req: Request, res: Response) => {
   res.format({
     html: function () {
       res.send(
@@ -42,9 +47,9 @@ router.get("/list", (req: Request, res: Response) => {
       res.json(users);
     },
   });
-});
+};
 
-router.get("/do/:action/:id", (req: Request, res: Response) => {
+const userDoAction = (req: Request, res: Response) => {
   const user = users.find((user) => user.id === parseInt(req.params.id));
 
   if (user !== undefined) {
@@ -54,6 +59,13 @@ router.get("/do/:action/:id", (req: Request, res: Response) => {
 
     res.send(`${newUser.name} do ${req.params.action}`);
   }
-});
+};
 
-module.exports = router;
+export {
+  userFormat,
+  userDoAction,
+  createUser,
+  updateUser,
+  deleteUser,
+  getUserById,
+};
