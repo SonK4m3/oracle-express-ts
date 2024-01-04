@@ -7,7 +7,8 @@ import express, {
 } from "express";
 import dotenv from "dotenv";
 
-const configViewEngine = require("./config/viewEngine");
+var configViewEngine = require("./config/viewEngine");
+var configVerboseErrors = require("./config/verboseErrors");
 var session = require("express-session");
 var apiRoutes = require("./routes/api");
 
@@ -15,9 +16,11 @@ dotenv.config();
 
 const app: Application = express();
 const port = process.env.PORT || 8081;
+const silent = process.env.NODE_ENV === "debug";
 
 // config
 configViewEngine(app);
+configVerboseErrors(app, silent);
 
 // middleware
 app.use(express.urlencoded({ extended: false }));
@@ -83,7 +86,6 @@ function restrict(req: Request, res: Response, next: NextFunction) {
 }
 
 app.get("/", (req: Request, res: Response) => {
-  console.log(req);
   res.redirect("/login");
 });
 
@@ -134,12 +136,44 @@ app.get("/logout", (req: Request, res: Response) => {
 
 app.use("/api/v1", apiRoutes);
 
-app.get("*", (req: Request, res: Response) => {
-  res.send("Sorry, this is invalid URL");
+// app.get("*", (req: Request, res: Response) => {
+//   res.send('Sorry, this is invalid URL. <a href="/logout">Go back</a>');
+// });
+
+app.get("/404", (req: Request, res: Response, next: NextFunction) => {
+  next();
+});
+
+app.get("/403", (req: Request, res: Response, next: NextFunction) => {
+  var err = new Error("not allowed!");
+  (err as any).status = 403;
+  next(err);
+});
+
+app.get("/500", (req: Request, res: Response, next: NextFunction) => {
+  next(new Error("keyboard cat!"));
+});
+
+app.use((req: Request, res: Response) => {
+  res.status(404);
+
+  res.format({
+    html: function () {
+      res.render("error/404", { url: req.url });
+    },
+    json: function () {
+      res.json({ error: "Not found" });
+    },
+    default: function () {
+      res.type("txt").send("Not found");
+    },
+  });
 });
 
 app.use(((err, req, res, next) => {
-  res.status(400).json({ error: err.message });
+  res.status(err.status || 500);
+  res.render("error/500", { error: err });
+  // res.status(400).json({ error: err.message });
 }) as ErrorRequestHandler);
 
 app.listen(port, () => {
