@@ -1,4 +1,10 @@
-import express, { Request, Response, Application, NextFunction } from "express";
+import express, {
+  Request,
+  Response,
+  Application,
+  NextFunction,
+  ErrorRequestHandler,
+} from "express";
 import dotenv from "dotenv";
 
 const configViewEngine = require("./config/viewEngine");
@@ -126,11 +132,15 @@ app.get("/logout", (req: Request, res: Response) => {
   });
 });
 
-app.use("/v1/api", apiRoutes);
+app.use("/api/v1", apiRoutes);
 
 app.get("*", (req: Request, res: Response) => {
   res.send("Sorry, this is invalid URL");
 });
+
+app.use(((err, req, res, next) => {
+  res.status(400).json({ error: err.message });
+}) as ErrorRequestHandler);
 
 app.listen(port, () => {
   console.log(`listening at http://localhost:${port}`);
