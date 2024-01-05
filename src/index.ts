@@ -6,6 +6,9 @@ import express, {
   ErrorRequestHandler,
 } from "express";
 import dotenv from "dotenv";
+import connectToDb from "./utils/connectToDB";
+import Logger from "./utils/logger";
+import morganMiddleware from "./config/morganMiddleware";
 
 var configViewEngine = require("./config/viewEngine");
 var configVerboseErrors = require("./config/verboseErrors");
@@ -32,6 +35,7 @@ app.use(
     cookie: { maxAge: 60 * 1000 },
   })
 );
+app.use(morganMiddleware);
 
 // session-persisted message middleware
 
@@ -136,6 +140,16 @@ app.get("/logout", (req: Request, res: Response) => {
 
 app.use("/api/v1", apiRoutes);
 
+app.get("/logger", (_, res) => {
+  Logger.error("This is an error log");
+  Logger.warn("This is a warn log");
+  Logger.info("This is a info log");
+  Logger.http("This is a http log");
+  Logger.debug("This is a debug log");
+
+  res.send("Hello world");
+});
+
 // app.get("*", (req: Request, res: Response) => {
 //   res.send('Sorry, this is invalid URL. <a href="/logout">Go back</a>');
 // });
@@ -177,5 +191,7 @@ app.use(((err, req, res, next) => {
 }) as ErrorRequestHandler);
 
 app.listen(port, () => {
-  console.log(`listening at http://localhost:${port}`);
+  Logger.info(`listening at http://localhost:${port}`);
+
+  // connectToDb();
 });
