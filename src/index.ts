@@ -6,7 +6,7 @@ import express, {
   ErrorRequestHandler,
 } from "express";
 import dotenv from "dotenv";
-import connectToDb from "./utils/connectToDB";
+import DBConnection from "./utils/connectToDB";
 import Logger from "./utils/logger";
 import morganMiddleware from "./config/morganMiddleware";
 
@@ -35,6 +35,7 @@ app.use(
     cookie: { maxAge: 60 * 1000 },
   })
 );
+app.use(express.json());
 app.use(morganMiddleware);
 
 // session-persisted message middleware
@@ -193,5 +194,12 @@ app.use(((err, req, res, next) => {
 app.listen(port, () => {
   Logger.info(`listening at http://localhost:${port}`);
 
-  // connectToDb();
+  DBConnection.initializePool();
+});
+
+process.on("SIGTERM", () => {
+  DBConnection.closePool().then(() => {
+    console.log("closed connection");
+    process.exit(0);
+  });
 });

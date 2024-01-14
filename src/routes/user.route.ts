@@ -1,13 +1,12 @@
 import express, { NextFunction, Request, Response } from "express";
 import {
   userFormat,
-  userDoAction,
-  createUser,
-  deleteUser,
+  createUserHandler,
+  deleteUserHandler,
   getUserById,
-  updateUser,
+  updateUserHandler,
+  createUserTableHandler,
 } from "../controller/user.controller";
-import User from "../typings/user";
 
 var router = express.Router();
 
@@ -38,13 +37,12 @@ router.param(
   }
 );
 
+router.post("/user-schema", createUserTableHandler);
+
 router.get("/", userFormat);
-
-router.get("/do/:action/:id", userDoAction);
-
-router.post("/", createUser);
-router.put("/:id", updateUser);
-router.delete("/:id", deleteUser);
+router.post("/", createUserHandler);
+router.put("/:id", updateUserHandler);
+router.delete("/:id", deleteUserHandler);
 router.get("/:id", getUserById);
 
 module.exports = router;
