@@ -67,7 +67,7 @@ const getUserById = async (req: Request, res: Response) => {
   const userId = parseInt(req.params.id, 10);
   const user = await getSingleUser(userId);
 
-  if (user === undefined) {
+  if (!user) {
     return res.json({
       message: "User not found",
     });

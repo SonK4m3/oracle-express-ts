@@ -65,29 +65,28 @@ const createUser = async (user: IUser) => {
   }
 };
 
-const getUsers = async () => {
+const getUsers = async (): Promise<IUser[]> => {
   const query = `SELECT id, username, email FROM users`;
   let conn;
 
   try {
     conn = await DBConnection.getConnection();
-    const result = await conn?.execute(query);
+    const result = await conn.execute(query);
 
-    if (result?.rows === undefined) return [];
+    if (!result.rows) return [];
 
-    return result.rows.map((row: any) => {
-      return {
-        id: row[0] as number,
-        username: row[1] as string,
-        email: row[2] as string,
-      };
-    });
+    return result.rows.map(([id, username, email]: any) => ({
+      id: id as number,
+      username: username as string,
+      email: email as string,
+    }));
   } catch (err) {
-    console.error("Error creating user:", err);
+    console.error("Error getting users:", err);
+    return [];
   } finally {
     if (conn) {
       try {
-        await conn.close(); // Release the connection back to the pool
+        await conn.close();
       } catch (err) {
         console.error("Error closing connection", err);
       }
@@ -95,28 +94,25 @@ const getUsers = async () => {
   }
 };
 
-const getSingleUser = async (id: number): Promise<IUser | undefined> => {
+const getSingleUser = async (id: number): Promise<IUser | null> => {
   const query = `SELECT id, username, email FROM users WHERE id = :id`;
   let conn;
 
   try {
     conn = await DBConnection.getConnection();
-    const result = await conn?.execute(query, [id]);
+    const result = await conn.execute(query, [id]);
 
-    if (result?.rows === undefined || result?.rows.length === 0)
-      return undefined;
+    if (!result.rows || result.rows.length === 0) {
+      return null;
+    }
 
-    const firstUser: any = result.rows[0];
-
-    const user: IUser = {
-      id: firstUser[0] as number,
-      username: firstUser[1] as string,
-      email: firstUser[2] as string,
-    };
+    const [userId, username, email] = result.rows[0] as any;
+    const user: IUser = { id: userId, username, email };
 
     return user;
   } catch (err) {
-    console.error("Error creating user:", err);
+    console.error("Error getting user:", err);
+    return null;
   } finally {
     if (conn) {
       try {
